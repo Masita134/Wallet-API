@@ -23,7 +23,9 @@ class WalletDataModelTest extends TestCase
 
     public function test_an_account_has_many_movements_and_each_movement_belongs_to_it(): void
     {
-        $account = Account::factory()->create();
+        $user = User::factory()->create();
+        $account = $user->account;
+
         $movement = Movement::factory()->for($account)->create([
             'type' => Movement::TYPE_TRANSFER_IN,
             'amount' => 125.50,
