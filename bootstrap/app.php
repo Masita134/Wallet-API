@@ -16,7 +16,21 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
+            fn (Request $request) =>
+                $request->is('api/*') || $request->expectsJson()
         );
-    })->create();
+
+        $exceptions->render(function (
+            \Illuminate\Auth\AuthenticationException $e,
+            Request $request
+        ) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => 'No autenticado.',
+                ], 401);
+            }
+        });
+    })
+    ->create();
