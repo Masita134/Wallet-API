@@ -18,16 +18,18 @@ class DepositController extends Controller
 
         $amount = $request->validated('amount');
 
-        DB::transaction(function () use ($account, $amount): void {
+        $movement = DB::transaction(function () use ($account, $amount): Movement {
             $account->increment('balance', $amount);
 
-            $account->movements()->create([
+            return $account->movements()->create([
                 'type' => Movement::TYPE_DEPOSIT,
                 'amount' => $amount,
             ]);
         });
 
         return response()->json([
+            'message' => 'Depósito realizado correctamente.',
+            'movement_id' => $movement->id,
             'balance' => number_format(
                 (float) $account->fresh()->balance,
                 2,

@@ -23,9 +23,13 @@ class DepositTest extends TestCase
                 'amount' => 1000,
             ]);
 
+        $movement = Movement::first();
+
         $response
             ->assertOk()
             ->assertJson([
+                'message' => 'Depósito realizado correctamente.',
+                'movement_id' => $movement->id,
                 'balance' => '1000.00',
             ]);
 
@@ -35,9 +39,51 @@ class DepositTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('movements', [
+            'id' => $movement->id,
             'account_id' => $user->account->id,
             'type' => Movement::TYPE_DEPOSIT,
             'amount' => '1000.00',
+        ]);
+
+        $this->assertDatabaseCount('movements', 1);
+    }
+
+    public function test_deposit_is_added_to_the_existing_account_balance(): void
+    {
+        $user = User::factory()->create();
+
+        $user->account->update([
+            'balance' => '1500.00',
+        ]);
+
+        $token = auth('api')->login($user);
+
+        $response = $this
+            ->withToken($token)
+            ->postJson('/api/v1/deposits', [
+                'amount' => 500,
+            ]);
+
+        $movement = Movement::first();
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'message' => 'Depósito realizado correctamente.',
+                'movement_id' => $movement->id,
+                'balance' => '2000.00',
+            ]);
+
+        $this->assertDatabaseHas('accounts', [
+            'user_id' => $user->id,
+            'balance' => '2000.00',
+        ]);
+
+        $this->assertDatabaseHas('movements', [
+            'id' => $movement->id,
+            'account_id' => $user->account->id,
+            'type' => Movement::TYPE_DEPOSIT,
+            'amount' => '500.00',
         ]);
 
         $this->assertDatabaseCount('movements', 1);
@@ -54,6 +100,8 @@ class DepositTest extends TestCase
             ->assertJsonStructure([
                 'message',
             ]);
+
+        $this->assertDatabaseCount('movements', 0);
     }
 
     public function test_deposit_rejects_zero_amount_without_changing_balance_or_movements(): void
@@ -157,9 +205,13 @@ class DepositTest extends TestCase
                 'user_id' => $otherUser->id,
             ]);
 
+        $movement = Movement::first();
+
         $response
             ->assertOk()
             ->assertJson([
+                'message' => 'Depósito realizado correctamente.',
+                'movement_id' => $movement->id,
                 'balance' => '500.00',
             ]);
 
@@ -174,6 +226,7 @@ class DepositTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('movements', [
+            'id' => $movement->id,
             'account_id' => $user->account->id,
             'type' => Movement::TYPE_DEPOSIT,
             'amount' => '500.00',
@@ -199,5 +252,7 @@ class DepositTest extends TestCase
             ->assertJsonStructure([
                 'message',
             ]);
+
+        $this->assertDatabaseCount('movements', 0);
     }
 }
