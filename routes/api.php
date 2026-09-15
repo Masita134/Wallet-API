@@ -44,11 +44,11 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/account', [AccountController::class, 'show']);
 
-        Route::get('/movements', [MovementController::class, 'index']);
+        // Route::get('/movements', [MovementController::class, 'index']);
 
-        Route::post('/deposit', [DepositController::class, 'store']);
+        Route::post('/deposits', [DepositController::class, 'store']);
 
-        Route::post('/transfer', [TransferController::class, 'store']);
+        // Route::post('/transfer', [TransferController::class, 'store']);
 
     });
 
