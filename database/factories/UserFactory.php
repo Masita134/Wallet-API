@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Account;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +13,8 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
+    protected bool $createAccount = true;
+
     /**
      * The current password being used by the factory.
      */
@@ -31,6 +34,22 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            if ($this->createAccount) {
+                Account::factory()->for($user)->create();
+            }
+        });
+    }
+
+    public function withoutAccount(): static
+    {
+        $this->createAccount = false;
+
+        return $this;
     }
 
     /**
