@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\MovementController;
 use App\Http\Controllers\Api\V1\DepositController;
 use App\Http\Controllers\Api\V1\TransferController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\SavedAccountController;
 
 Route::prefix('v1')->group(function () {
 
@@ -43,6 +44,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show']);
 
         Route::get('/account', [AccountController::class, 'show']);
+        
+        Route::post('/cbu/{cbu}/users/{idUser}', [SavedAccountController::class, 'store']);
 
         // Route::get('/movements', [MovementController::class, 'index']);
 
