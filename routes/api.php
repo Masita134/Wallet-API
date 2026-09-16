@@ -2,9 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\AccountController;
-use App\Http\Controllers\Api\V1\MovementController;
-use App\Http\Controllers\Api\V1\DepositController;
 use App\Http\Controllers\Api\V1\TransferController;
 use App\Http\Controllers\Api\V1\ProfileController;
 
@@ -42,13 +39,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/profile', [ProfileController::class, 'show']);
 
-        Route::get('/account', [AccountController::class, 'show']);
-
-        Route::get('/movements', [MovementController::class, 'index']);
-
-        Route::post('/deposit', [DepositController::class, 'store']);
-
-        Route::post('/transfer', [TransferController::class, 'store']);
+        Route::post('/transfers', [TransferController::class, 'store']);
 
     });
 
