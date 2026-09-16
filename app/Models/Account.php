@@ -37,4 +37,8 @@ class Account extends Model
     {
         return $this->hasMany(Movement::class);
     }
+    public function savedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'saved_accounts');
+    }
 }
