@@ -47,6 +47,10 @@ Route::prefix('v1')->group(function () {
         
         Route::post('/cbu/{cbu}/users/{idUser}', [SavedAccountController::class, 'store']);
 
+        Route::get('/cbu', [SavedAccountController::class, 'index']);
+
+        Route::delete('/cbu/{cbu}/users/{idUser}', [SavedAccountController::class, 'destroy']);
+
         // Route::get('/movements', [MovementController::class, 'index']);
 
         Route::post('/deposits', [DepositController::class, 'store']);
