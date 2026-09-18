@@ -51,7 +51,7 @@ Route::prefix('v1')->group(function () {
 
         Route::delete('/cbu/{cbu}/users/{idUser}', [SavedAccountController::class, 'destroy']);
 
-        // Route::get('/movements', [MovementController::class, 'index']);
+        Route::get('/movements', [MovementController::class, 'index']);
 
         Route::post('/deposits', [DepositController::class, 'store']);
 
