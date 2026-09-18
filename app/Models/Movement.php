@@ -8,7 +8,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['account_id', 'type', 'amount'])]
+#[Fillable([
+    'account_id',
+    'type',
+    'amount',
+    'counterparty_cbu',
+])]
 class Movement extends Model
 {
     /** @use HasFactory<MovementFactory> */
