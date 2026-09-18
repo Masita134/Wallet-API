@@ -2,9 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\AccountController;
-use App\Http\Controllers\Api\V1\MovementController;
-use App\Http\Controllers\Api\V1\DepositController;
 use App\Http\Controllers\Api\V1\TransferController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\SavedAccountController;
@@ -43,6 +40,8 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/profile', [ProfileController::class, 'show']);
 
+        Route::post('/transfers', [TransferController::class, 'store']);
+      
         Route::get('/account', [AccountController::class, 'show']);
         
         Route::post('/cbu/{cbu}/users/{idUser}', [SavedAccountController::class, 'store']);
@@ -54,8 +53,6 @@ Route::prefix('v1')->group(function () {
         Route::get('/movements', [MovementController::class, 'index']);
 
         Route::post('/deposits', [DepositController::class, 'store']);
-
-        // Route::post('/transfer', [TransferController::class, 'store']);
 
     });
 
