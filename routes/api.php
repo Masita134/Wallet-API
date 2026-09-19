@@ -5,6 +5,10 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\TransferController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\SavedAccountController;
+use App\Http\Controllers\Api\V1\AccountController;
+use App\Http\Controllers\Api\V1\DepositController;
+use App\Http\Controllers\Api\V1\MovementController;
+use App\Http\Controllers\Api\V1\FixedTermController;
 
 Route::prefix('v1')->group(function () {
 
@@ -53,6 +57,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/movements', [MovementController::class, 'index']);
 
         Route::post('/deposits', [DepositController::class, 'store']);
+
+        Route::post('/investments/fixed-term/simulate', [FixedTermController::class, 'simulate']);
 
     });
 
