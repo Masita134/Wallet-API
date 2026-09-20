@@ -9,7 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'cbu', 'balance'])]
+#[Fillable([
+    'user_id',
+    'cbu',
+    'balance',
+    'type',
+    'currency',
+])]
 class Account extends Model
 {
     /** @use HasFactory<AccountFactory> */
@@ -22,17 +28,11 @@ class Account extends Model
         ];
     }
 
-    /**
-     * Get the account owner.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the account movements.
-     */
     public function movements(): HasMany
     {
         return $this->hasMany(Movement::class);

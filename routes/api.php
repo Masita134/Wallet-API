@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\TransferController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\AccountController;
 
 Route::prefix('v1')->group(function () {
 
@@ -38,6 +39,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:api')->group(function () {
 
         Route::get('/profile', [ProfileController::class, 'show']);
+
+        Route::get('/account', [AccountController::class, 'show']);
 
         Route::post('/transfers', [TransferController::class, 'store']);
 
