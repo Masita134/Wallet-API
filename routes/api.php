@@ -48,6 +48,8 @@ Route::prefix('v1')->group(function () {
         
         Route::delete('/profile', [ProfileController::class, 'destroy']);
 
+        Route::get('/account', [AccountController::class, 'show']);
+
         Route::post('/transfers', [TransferController::class, 'store']);
       
         Route::get('/account', [AccountController::class, 'show']);
