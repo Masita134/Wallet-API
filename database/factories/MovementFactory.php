@@ -24,6 +24,7 @@ class MovementFactory extends Factory
             'account_id' => Account::factory(),
             'type' => Movement::TYPE_DEPOSIT,
             'amount' => fake()->randomFloat(2, 1, 10000),
+            'counterparty_cbu' => null,
         ];
     }
 }

@@ -20,6 +20,7 @@ return new class extends Migration
                 'transfer_in',
             ]);
             $table->decimal('amount', 15, 2);
+            $table->string('counterparty_cbu', 22)->nullable();
             $table->timestamps();
         });
     }
