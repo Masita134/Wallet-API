@@ -29,9 +29,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/me', [AuthController::class, 'me']);
 
             Route::post('/logout', [AuthController::class, 'logout']);
-
         });
-
     });
 
     /*
@@ -43,17 +41,15 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:api')->group(function () {
 
         Route::get('/profile', [ProfileController::class, 'show']);
-        
+
         Route::put('/profile', [ProfileController::class, 'update']);
-        
+
         Route::delete('/profile', [ProfileController::class, 'destroy']);
 
         Route::get('/account', [AccountController::class, 'show']);
 
         Route::post('/transfers', [TransferController::class, 'store']);
-      
-        Route::get('/account', [AccountController::class, 'show']);
-        
+
         Route::post('/cbu/{cbu}/users/{idUser}', [SavedAccountController::class, 'store']);
 
         Route::get('/cbu', [SavedAccountController::class, 'index']);
@@ -65,7 +61,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/deposits', [DepositController::class, 'store']);
 
         Route::post('/investments/fixed-term/simulate', [FixedTermController::class, 'simulate']);
-
     });
 
+    Route::middleware(['auth:api', 'admin'])->get('/admin/test', function () {
+        return response()->json([
+            'message' => 'Acceso administrativo autorizado.',
+        ]);
+    });
 });
