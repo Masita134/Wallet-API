@@ -42,6 +42,7 @@ class AuthTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'email' => 'juan@example.com',
+            'is_admin' => false,
         ]);
 
         $this->assertDatabaseHas('accounts', [
@@ -229,5 +230,24 @@ class AuthTest extends TestCase
             ->assertStatus(200)
             ->assertJsonMissingPath('user.password')
             ->assertJsonMissingPath('user.remember_token');
+    }
+
+    public function test_registration_cannot_create_an_admin(): void
+    {
+        $response = $this->postJson('/api/v1/auth/register', [
+            'name' => 'Potential Admin',
+            'email' => 'potential-admin@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'is_admin' => true,
+        ]);
+
+        $response
+            ->assertStatus(201);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'potential-admin@example.com',
+            'is_admin' => false,
+        ]);
     }
 }
