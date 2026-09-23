@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\MovementController;
 use App\Http\Controllers\Api\V1\FixedTermController;
 use App\Http\Controllers\Api\V1\AdminMovementController;
 use App\Http\Controllers\Api\V1\AdminUserController;
+use App\Http\Controllers\Api\V1\AdminAccountController;
 
 Route::prefix('v1')->group(function () {
 
@@ -76,5 +77,7 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('admin/movements', AdminMovementController::class);
 
         Route::apiResource('admin/users', AdminUserController::class);
+
+        Route::apiResource('admin/accounts', AdminAccountController::class);
     });
 });
