@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\DepositController;
 use App\Http\Controllers\Api\V1\MovementController;
 use App\Http\Controllers\Api\V1\FixedTermController;
 use App\Http\Controllers\Api\V1\AdminMovementController;
+use App\Http\Controllers\Api\V1\AdminUserController;
 
 Route::prefix('v1')->group(function () {
 
@@ -73,5 +74,7 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::apiResource('admin/movements', AdminMovementController::class);
+
+        Route::apiResource('admin/users', AdminUserController::class);
     });
 });
