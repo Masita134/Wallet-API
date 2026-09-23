@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\DepositController;
 use App\Http\Controllers\Api\V1\MovementController;
 use App\Http\Controllers\Api\V1\FixedTermController;
+use App\Http\Controllers\Api\V1\AdminMovementController;
 
 Route::prefix('v1')->group(function () {
 
@@ -63,9 +64,14 @@ Route::prefix('v1')->group(function () {
         Route::post('/investments/fixed-term/simulate', [FixedTermController::class, 'simulate']);
     });
 
-    Route::middleware(['auth:api', 'admin'])->get('/admin/test', function () {
-        return response()->json([
-            'message' => 'Acceso administrativo autorizado.',
-        ]);
+    Route::middleware(['auth:api', 'admin'])->group(function () {
+
+        Route::get('/admin/test', function () {
+            return response()->json([
+                'message' => 'Acceso administrativo autorizado.',
+            ]);
+        });
+
+        Route::apiResource('admin/movements', AdminMovementController::class);
     });
 });
