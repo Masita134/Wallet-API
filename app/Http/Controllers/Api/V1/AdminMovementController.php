@@ -20,24 +20,56 @@ class AdminMovementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'per_page' => [
+                'sometimes',
+                'integer',
+                'min:1',
+                'max:100',
+            ],
+
+            'sort' => [
+                'sometimes',
+                'in:id,account_id,type,amount,counterparty_cbu,created_at',
+            ],
+
+            'order' => [
+                'sometimes',
+                'in:asc,desc',
+            ],
+
+            'account_id' => [
+                'sometimes',
+                'integer',
+                'exists:accounts,id',
+            ],
+
+            'user_id' => [
+                'sometimes',
+                'integer',
+                'exists:users,id',
+            ],
+        ]);
+
+        $perPage = $validated['per_page'] ?? 15;
+        $sort = $validated['sort'] ?? 'created_at';
+        $order = $validated['order'] ?? 'desc';
+
         $query = Movement::with('account');
 
-        // filled() asegura que el parámetro exista y no sea un string vacío
-        if ($request->filled('account_id')) {
-            $query->where('account_id', $request->input('account_id'));
+        if (isset($validated['account_id'])) {
+            $query->where('account_id', $validated['account_id']);
         }
 
-        if ($request->filled('user_id')) {
-            $query->whereHas('account', function ($q) use ($request) {
-                $q->where('user_id', $request->input('user_id'));
+        if (isset($validated['user_id'])) {
+            $query->whereHas('account', function ($q) use ($validated) {
+                $q->where('user_id', $validated['user_id']);
             });
         }
 
-        // Ordena descendente por defecto; permite 'asc' si se solicita explícitamente
-        $direction = strtolower($request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
-        $query->orderBy('created_at', $direction);
+        $query->orderBy($sort, $order);
 
-        $movements = $query->paginate(15);
+        $movements = $query->paginate($perPage);
 
         return response()->json($movements);
     }
