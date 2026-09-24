@@ -163,4 +163,78 @@ class AdminMovementTest extends TestCase
         $response->assertStatus(422)
                  ->assertJsonValidationErrors(['account_id', 'type', 'amount']);
     }
+        public function test_admin_puede_configurar_paginacion()
+    {
+        $admin = $this->createAdminUser();
+
+        $user = $this->createRegularUser();
+        $account = $user->account;
+
+        Movement::factory()
+            ->count(20)
+            ->create([
+                'account_id' => $account->id,
+            ]);
+        $response = $this->actingAs($admin, 'api')
+                         ->getJson('/api/v1/admin/movements?per_page=10');
+
+        $response->assertOk()
+                 ->assertJsonPath('per_page', 10)
+                 ->assertJsonPath('current_page', 1);
+
+        $this->assertCount(
+            10,
+            $response->json('data')
+        );
+    }
+
+
+    public function test_admin_puede_ordenar_movimientos()
+    {
+        $admin = $this->createAdminUser();
+
+        $user = $this->createRegularUser();
+        $account = $user->account;
+
+        Movement::factory()->create([
+            'account_id' => $account->id,
+            'amount' => 100.00,
+        ]);
+
+        Movement::factory()->create([
+            'account_id' => $account->id,
+            'amount' => 500.00,
+        ]);
+
+        $response = $this->actingAs($admin, 'api')
+                        ->getJson('/api/v1/admin/movements?sort=amount&order=asc');
+
+        $response->assertOk();
+
+        $amounts = collect($response->json('data'))
+            ->pluck('amount')
+            ->values();
+
+        $this->assertSame('100.00', $amounts->first());
+    }
+
+    public function test_rechaza_per_page_mayor_a_100()
+    {
+        $admin = $this->createAdminUser();
+
+        $response = $this->actingAs($admin, 'api')
+                         ->getJson('/api/v1/admin/movements?per_page=101');
+
+        $response->assertUnprocessable();
+    }
+
+    public function test_rechaza_sort_invalido()
+    {
+        $admin = $this->createAdminUser();
+
+        $response = $this->actingAs($admin, 'api')
+                         ->getJson('/api/v1/admin/movements?sort=password');
+
+        $response->assertUnprocessable();
+    }
 }
