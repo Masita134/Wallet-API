@@ -68,4 +68,21 @@ class AccountDataTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    public function test_user_cannot_access_another_users_account(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $otherAccount = $otherUser->account;
+
+        $token = auth('api')->login($user);
+
+        $response = $this->withToken($token)->getJson('/api/v1/account');
+
+        $response
+            ->assertStatus(200)
+            ->assertJsonPath('account.cbu', $user->account->cbu)
+            ->assertJsonPath('account.cbu', fn ($cbu) => $cbu !== $otherAccount->cbu);
+    }
 }
