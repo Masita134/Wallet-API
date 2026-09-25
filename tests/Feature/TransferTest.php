@@ -109,6 +109,18 @@ class TransferTest extends TestCase
             'id' => $destinationAccount->id,
             'balance' => 0,
         ]);
+
+        $this->assertDatabaseMissing('movements', [
+            'account_id' => $originAccount->id,
+            'type' => Movement::TYPE_TRANSFER_OUT,
+            'amount' => 1000,
+        ]);
+
+        $this->assertDatabaseMissing('movements', [
+            'account_id' => $destinationAccount->id,
+            'type' => Movement::TYPE_TRANSFER_IN,
+            'amount' => 1000,
+        ]);
     }
 
     public function test_transfer_rejects_own_account(): void
