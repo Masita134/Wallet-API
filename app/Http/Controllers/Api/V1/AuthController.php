@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
@@ -50,18 +51,38 @@ class AuthController extends Controller
     /**
      * Iniciar sesión.
      */
-    public function login(Request $request)
+   public function login(Request $request)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
+        $normalizedEmail = strtolower(trim($credentials['email']));
+
+        $key = 'login:' . hash(
+            'sha256',
+            $normalizedEmail . '|' . $request->ip()
+        );
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $retryAfter = RateLimiter::availableIn($key);
+
+            return response()->json([
+                'message' => 'Demasiados intentos de inicio de sesión.',
+                'retry_after' => $retryAfter,
+            ], 429)->header('Retry-After', $retryAfter);
+        }
+
         if (!$token = auth('api')->attempt($credentials)) {
+            RateLimiter::hit($key, 60);
+
             return response()->json([
                 'message' => 'Credenciales inválidas.',
             ], 401);
         }
+
+        RateLimiter::clear($key);
 
         return response()->json([
             'access_token' => $token,
