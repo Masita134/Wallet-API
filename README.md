@@ -163,19 +163,31 @@ Authorization: Bearer <token>
 
 ### Ejemplo de login
 
-En PowerShell:
+Después de ejecutar:
+
+```powershell
+herd php artisan migrate:fresh --seed
+```
+el seeder crea tres usuarios de prueba:
+| Usuario     | Email                | Contraseña | Rol           |
+| ----------- | -------------------- | ---------- | ------------- |
+| Test User   | `test@example.com`   | `password` | Usuario       |
+| Second User | `second@example.com` | `password` | Usuario       |
+| Test Admin  | `admin@example.com`  | `password` | Administrador |
+
+Estas credenciales son únicamente para desarrollo y demostración local.
 
 ```powershell
 $login = Invoke-RestMethod `
     -Method Post `
     -Uri http://127.0.0.1:8000/api/v1/auth/login `
     -ContentType 'application/json' `
-    -Body '{"email":"usuario@example.com","password":"password123"}'
+    -Body '{"email":"test@example.com","password":"password"}'
 
 $login.access_token
 ```
+El valor de access_token debe utilizarse para acceder a las rutas protegidas.
 
-El valor de `access_token` debe utilizarse para acceder a las rutas protegidas.
 
 ### Ejemplo de consulta del perfil
 

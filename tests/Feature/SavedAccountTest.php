@@ -107,4 +107,24 @@ class SavedAccountTest extends TestCase
 
         $this->assertDatabaseCount('saved_accounts', 0);
     }
+
+    public function test_saved_accounts_are_isolated_between_users(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $token = auth('api')->login($user);
+
+        $this->withToken($token)
+            ->postJson("/api/v1/cbu/{$otherUser->account->cbu}/users/{$user->id}")
+            ->assertOk();
+
+        $response = $this->withToken($token)
+            ->getJson('/api/v1/cbu');
+
+        $response
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.cbu', $otherUser->account->cbu);
+    }
 }

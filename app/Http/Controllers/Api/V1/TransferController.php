@@ -7,9 +7,86 @@ use App\Models\Account;
 use App\Models\Movement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use OpenApi\Attributes as OA;
 
 class TransferController extends Controller
 {
+    #[OA\Post(
+        path: '/api/v1/transfers',
+        summary: 'Realizar una transferencia a otra cuenta',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['destination_cbu', 'amount'],
+                properties: [
+                    new OA\Property(
+                        property: 'destination_cbu',
+                        type: 'string',
+                        example: '1255774332638486003143'
+                    ),
+                    new OA\Property(
+                        property: 'amount',
+                        type: 'number',
+                        format: 'float',
+                        example: 50.00
+                    )
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Transferencia realizada correctamente',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Transferencia realizada correctamente.'
+                        ),
+                        new OA\Property(
+                            property: 'transfer',
+                            properties: [
+                                new OA\Property(
+                                    property: 'destination_cbu',
+                                    type: 'string',
+                                    example: '1255774332638486003143'
+                                ),
+                                new OA\Property(
+                                    property: 'amount',
+                                    type: 'number',
+                                    example: 50
+                                )
+                            ],
+                            type: 'object'
+                        ),
+                        new OA\Property(
+                            property: 'balance',
+                            type: 'string',
+                            example: '0.00'
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Usuario no autenticado',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedError')
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Cuenta a transferir no encontrada',
+                content: new OA\JsonContent(ref: '#/components/schemas/AccountNotFoundError')
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Error de validación o regla de negocio',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')
+            )
+        ]
+    )]
+
     public function store(Request $request)
     {
         $data = $request->validate([
