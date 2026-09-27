@@ -40,8 +40,7 @@ Route::prefix('v1')->group(function () {
     | Rutas protegidas
     |--------------------------------------------------------------------------
     */
-
-    Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:api')->group(function () {
 
         Route::get('/profile', [ProfileController::class, 'show']);
 
@@ -53,9 +52,11 @@ Route::prefix('v1')->group(function () {
 
         Route::post('/transfers', [TransferController::class, 'store']);
 
-        Route::post('/cbu/{cbu}/users/{idUser}', [SavedAccountController::class, 'store']);
-
         Route::get('/cbu', [SavedAccountController::class, 'index']);
+
+        Route::get('/cbu/users/{idUser}', [SavedAccountController::class, 'index']);
+
+        Route::post('/cbu/users/{idUser}', [SavedAccountController::class, 'store']);
 
         Route::delete('/cbu/{cbu}/users/{idUser}', [SavedAccountController::class, 'destroy']);
 

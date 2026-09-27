@@ -5,7 +5,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use Illuminate\Http\JsonResponse;
+<<<<<<< HEAD
+use Illuminate\Http\Request;
+=======
 use OpenApi\Attributes as OA;
+>>>>>>> origin/dev
 
 
 class SavedAccountController extends Controller
@@ -105,8 +109,9 @@ class SavedAccountController extends Controller
         ]
     )]
 
-    public function store(string $cbu, int $idUser): JsonResponse
+    public function store(Request $request, int $idUser): JsonResponse
     {
+        $cbu = $request->input('cbu');
         $user = auth('api')->user();
 
         if ($user->id !== $idUser) {

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Override;
 
 class SaveAdminMovementRequest extends FormRequest
@@ -27,7 +28,14 @@ class SaveAdminMovementRequest extends FormRequest
             'account_id' => 'required|exists:accounts,id',
             'type' => 'required|in:deposit,transfer_in,transfer_out',
             'amount' => 'required|numeric|min:0.01',
-            'counterpart_cbu' => 'nullable|string|max:22', //<-- esto seria opcional ya que depende el tipo de moviento que el admin realice.
+            'counterparty_cbu' => [
+                'nullable',
+                'string',
+                'digits:22',
+                Rule::requiredIf(
+                    in_array($this->input('type'), ['transfer_in', 'transfer_out'])
+                ),
+            ],
         ];
     }
 
