@@ -80,4 +80,24 @@ class AdminAuthorizationTest extends TestCase
         $this->assertFalse($user->is_admin);
         $this->assertFalse($user->isAdmin());
     }
+    public function test_api_forbidden_without_accept_header_returns_json(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+        ]);
+
+        $token = auth('api')->login($user);
+
+        $response = $this->withHeader(
+            'Authorization',
+            'Bearer ' . $token
+        )->get('/api/v1/admin/test');
+
+        $response
+            ->assertStatus(403)
+            ->assertHeader('Content-Type', 'application/json')
+            ->assertJson([
+                'message' => 'No tiene permisos para acceder a este recurso.',
+            ]);
+    }
 }

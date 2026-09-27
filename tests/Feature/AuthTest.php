@@ -250,4 +250,74 @@ class AuthTest extends TestCase
             'is_admin' => false,
         ]);
     }
+    public function test_api_not_found_returns_clean_json_without_internal_details(): void
+    {
+        $response = $this->get('/api/v1/ruta-que-no-existe');
+
+        $response
+            ->assertStatus(404)
+            ->assertHeader('Content-Type', 'application/json')
+            ->assertJson([
+                'message' => 'Recurso no encontrado.',
+            ])
+            ->assertJsonMissingPath('exception')
+            ->assertJsonMissingPath('file')
+            ->assertJsonMissingPath('line')
+            ->assertJsonMissingPath('trace');
+   
+    }
+    public function test_api_unauthorized_without_accept_header_returns_json(): void
+    {
+        $response = $this->get('/api/v1/auth/me');
+
+        $response
+            ->assertStatus(401)
+            ->assertHeader('Content-Type', 'application/json')
+            ->assertJson([
+                'message' => 'No autenticado.',
+            ]);
+    }
+    public function test_api_validation_error_without_accept_header_returns_json(): void
+    {
+        $response = $this->post('/api/v1/auth/register', []);
+
+        $response
+            ->assertStatus(422)
+            ->assertHeader('Content-Type', 'application/json')
+            ->assertJsonStructure([
+                'message',
+                'errors',
+            ]);
+    }
+    public function test_login_is_limited_after_five_failed_attempts(): void
+    {
+        $email = 'ratelimit@example.com';
+
+        User::factory()->create([
+            'email' => $email,
+            'password' => 'password123',
+        ]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->postJson('/api/v1/auth/login', [
+                'email' => $email,
+                'password' => 'wrong-password',
+            ]);
+
+            $response->assertStatus(401);
+        }
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $email,
+            'password' => 'wrong-password',
+        ]);
+
+        $response
+            ->assertStatus(429)
+            ->assertJsonStructure([
+                'message',
+                'retry_after',
+            ])
+            ->assertHeader('Retry-After');
+    }
 }
