@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use OpenApi\Attributes as OA;
 use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
@@ -47,6 +48,62 @@ class AuthController extends Controller
             'user' => $user,
         ], 201);
     }
+
+    #[OA\Post(
+        path: '/api/v1/auth/login',
+        summary: 'Iniciar sesión',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'password'],
+                properties: [
+                    new OA\Property(
+                        property: 'email',
+                        type: 'string',
+                        format: 'email',
+                        example: 'estudiante@example.com'
+                    ),
+                    new OA\Property(
+                        property: 'password',
+                        type: 'string',
+                        format: 'password',
+                        example: 'password123'
+                    )
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Login correcto',
+                content: new OA\JsonContent(
+                    required: ['access_token', 'token_type'],
+                    properties: [
+                        new OA\Property(
+                            property: 'access_token',
+                            type: 'string',
+                            example: 'eyJ0eXAiOiJKV1QiLCJhbGciOi...'
+                        ),
+                        new OA\Property(
+                            property: 'token_type',
+                            type: 'string',
+                            example: 'Bearer'
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Credenciales incorrectas',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedError')
+                ),
+            new OA\Response(
+                response: 422,
+                description: 'Error de validación',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')
+                )
+        ]
+    )]
 
     /**
      * Iniciar sesión.

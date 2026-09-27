@@ -11,12 +11,50 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use OpenApi\Attributes as OA;
 
 class AdminUserController extends Controller
 {
     /**
      * Listar usuarios.
      */
+    #[OA\Get(
+        path: '/api/v1/admin/users',
+        summary: 'Listar usuarios del sistema (Administrador)',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Cantidad de registros por página', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 15)),
+            new OA\Parameter(name: 'sort', in: 'query', required: false, description: 'Campo por el cual ordenar', schema: new OA\Schema(type: 'string', enum: ['id', 'name', 'email', 'age', 'created_at'], default: 'created_at')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Dirección del ordenamiento', schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'], default: 'desc'))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Listado paginado de usuarios',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'name', type: 'string', example: 'Usuario de Prueba'),
+                                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'usuario@example.com'),
+                                    new OA\Property(property: 'age', type: 'integer', nullable: true, example: 22),
+                                    new OA\Property(property: 'image', type: 'string', nullable: true, example: 'profiles/default.jpg')
+                                ]
+                            )
+                        ),
+                        new OA\Property(property: 'total', type: 'integer', example: 12)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Usuario no autenticado', content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedError'))
+        ]
+    )]
+
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -57,6 +95,56 @@ class AdminUserController extends Controller
     /**
      * Crear usuario y su cuenta asociada.
      */
+    #[OA\Post(
+        path: '/api/v1/admin/users',
+        summary: 'Crear un nuevo usuario y su cuenta bancaria (Administrador)',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'email', 'password', 'password_confirmation'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Nuevo Usuario'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 255, example: 'nuevo@example.com'),
+                    new OA\Property(property: 'password', type: 'string', minLength: 8, example: 'Secreta123'),
+                    new OA\Property(property: 'password_confirmation', type: 'string', minLength: 8, example: 'Secreta123'),
+                    new OA\Property(property: 'age', type: 'integer', minimum: 0, nullable: true, example: 25),
+                    new OA\Property(property: 'image', type: 'string', maxLength: 255, nullable: true, example: 'profiles/avatar.png')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Usuario creado exitosamente',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Usuario creado correctamente.'),
+                        new OA\Property(
+                            property: 'user',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 5),
+                                new OA\Property(property: 'name', type: 'string', example: 'Nuevo Usuario'),
+                                new OA\Property(property: 'email', type: 'string', example: 'nuevo@example.com'),
+                                new OA\Property(
+                                    property: 'account',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'cbu', type: 'string', example: '1234567890123456789012'),
+                                        new OA\Property(property: 'balance', type: 'number', format: 'float', example: 0.00)
+                                    ]
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Usuario no autenticado', content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedError')),
+            new OA\Response(response: 422, description: 'Error de validación (email duplicado, contraseñas no coinciden, etc.)', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError'))
+        ]
+    )]
+
     public function store(StoreUserRequest $request): JsonResponse
     {
         $user = DB::transaction(function () use ($request): User {
@@ -92,6 +180,50 @@ class AdminUserController extends Controller
     /**
      * Consultar un usuario.
      */
+
+    #[OA\Get(
+        path: '/api/v1/admin/users/{user}',
+        summary: 'Consultar detalles de un usuario específico (Administrador)',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'user',
+                in: 'path',
+                required: true,
+                description: 'ID del usuario a consultar',
+                schema: new OA\Schema(type: 'integer', example: 5)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Usuario obtenido correctamente',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'user',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 5),
+                                new OA\Property(property: 'name', type: 'string', example: 'Nuevo Usuario'),
+                                new OA\Property(
+                                    property: 'account',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'cbu', type: 'string', example: '1234567890123456789012'),
+                                        new OA\Property(property: 'balance', type: 'number', format: 'float', example: 1500.50)
+                                    ]
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Usuario no autenticado', content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedError')),
+            new OA\Response(response: 404, description: 'Usuario no encontrado')
+        ]
+    )]
+
     public function show(User $user): JsonResponse
     {
         $user->load('account');
@@ -109,6 +241,50 @@ class AdminUserController extends Controller
     /**
      * Actualizar un usuario.
      */
+
+    #[OA\Put(
+        path: '/api/v1/admin/users/{user}',
+        summary: 'Actualizar los datos de un usuario existente (Administrador)',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'user',
+                in: 'path',
+                required: true,
+                description: 'ID del usuario a actualizar',
+                schema: new OA\Schema(type: 'integer', example: 5)
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Nombre Actualizado'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 255, example: 'actualizado@example.com'),
+                    new OA\Property(property: 'password', type: 'string', minLength: 8, example: 'NuevaClave123'),
+                    new OA\Property(property: 'password_confirmation', type: 'string', minLength: 8, example: 'NuevaClave123'),
+                    new OA\Property(property: 'age', type: 'integer', minimum: 0, nullable: true, example: 26),
+                    new OA\Property(property: 'image', type: 'string', maxLength: 255, nullable: true, example: 'profiles/nuevo-avatar.png')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Usuario actualizado exitosamente',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Usuario actualizado correctamente.'),
+                        new OA\Property(property: 'user', type: 'object', additionalProperties: true)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Usuario no autenticado', content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedError')),
+            new OA\Response(response: 404, description: 'Usuario no encontrado'),
+            new OA\Response(response: 422, description: 'Error de validación', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError'))
+        ]
+    )]
+
     public function update(
         UpdateUserRequest $request,
         User $user
@@ -144,6 +320,35 @@ class AdminUserController extends Controller
     /**
      * Eliminar un usuario.
      */
+
+    #[OA\Delete(
+        path: '/api/v1/admin/users/{user}',
+        summary: 'Eliminar un usuario del sistema (Administrador)',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'user',
+                in: 'path',
+                required: true,
+                description: 'ID del usuario a eliminar',
+                schema: new OA\Schema(type: 'integer', example: 5)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Usuario eliminado exitosamente',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Usuario eliminado correctamente.')
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Usuario no autenticado', content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedError')),
+            new OA\Response(response: 404, description: 'Usuario no encontrado')
+        ]
+    )]
+
     public function destroy(User $user): JsonResponse
     {
         $user->delete();
