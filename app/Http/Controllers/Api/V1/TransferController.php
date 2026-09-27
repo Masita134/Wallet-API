@@ -74,11 +74,13 @@ class TransferController extends Controller
             $source->movements()->create([
                 'type' => Movement::TYPE_TRANSFER_OUT,
                 'amount' => $data['amount'],
+                'counterparty_cbu' => $destination->cbu,
             ]);
 
             $destination->movements()->create([
                 'type' => Movement::TYPE_TRANSFER_IN,
                 'amount' => $data['amount'],
+                'counterparty_cbu' => $source->cbu,
             ]);
 
             return [
