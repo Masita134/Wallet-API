@@ -1,8 +1,13 @@
 # Wallet API
 
-API REST para una billetera virtual desarrollada con **Laravel**, **PHP** y autenticación **JWT**.
+API REST robusta para una billetera virtual, desarrollada con **Laravel**, **PHP** y autenticación **JWT**.
 
-El proyecto fue desarrollado como trabajo grupal para practicar el diseño y desarrollo de una API REST, autenticación, manejo de cuentas y movimientos, validaciones, persistencia con base de datos y testing automatizado.
+El proyecto abarca el diseño y desarrollo completo de un sistema financiero escalable que incluye: autenticación, manejo de cuentas, transferencias seguras, agenda de contactos, simulación de plazos fijos, panel de administración y testing automatizado.
+
+Todo el entorno de producción se encuentra desplegado en **AlwaysData**.
+
+`https://afgamalerio.alwaysdata.net/front/
+https://afgamalerio.alwaysdata.net/`
 
 ---
 
@@ -20,45 +25,38 @@ El proyecto fue desarrollado como trabajo grupal para practicar el diseño y des
 - **PHP** 8.3 o superior
 - **Laravel** 13
 - **Laravel Herd** para administrar PHP y Composer en el entorno local
-- **SQLite** como base de datos local
-- **JWT** para autenticación
-- **Composer** para dependencias PHP
-- **Node.js / npm** para los assets del proyecto
-- **PHPUnit** para testing
-- **Git / GitHub** para control de versiones
+- **MySQL / SQLite** como motores de base de datos
+- **JWT** (`php-open-source-saver/jwt-auth`) para autenticación
+- **Swagger / OpenAPI** para documentación de endpoints
+- **Composer** para dependencias
+- **Node.js / npm** para los assets del frontend base
+- **PHPUnit** para testing automatizado
+- **Git / GitHub** para control de versiones y trabajo colaborativo
+- **AlwaysData** para el despliegue en producción
 
 ---
 
 ## Requisitos
 
-Antes de comenzar, tener instalado:
+Antes de comenzar, es necesario contar con:
 
 - PHP 8.3 o superior
 - Composer
-- Laravel Herd (recomendado para este proyecto)
+- Laravel Herd (recomendado para entorno local)
 - Git
 - Node.js y npm
 
-### Importante sobre PHP
-
-En el entorno de desarrollo de este proyecto se utiliza **Laravel Herd** porque permite trabajar con la versión de PHP requerida por Laravel y las dependencias del proyecto.
-
-En Windows, si también tenés XAMPP instalado, `php` puede apuntar a otra versión de PHP. Por eso, para los comandos de Artisan y Composer de este proyecto se recomienda utilizar:
-
-```powershell
-herd php artisan ...
-herd composer ...
-```
+> **Importante sobre PHP:** En entornos Windows con XAMPP, el comando `php` puede apuntar a versiones antiguas. Se recomienda usar Laravel Herd y anteponer `herd` a los comandos (`herd php artisan ...`).
 
 ---
 
-## Instalación
+## Instalación Local
 
 ### 1. Clonar el repositorio
 
 ```powershell
-git clone https://github.com/Masita134/Wallet-API.git
-Set-Location Wallet-API
+git clone [https://github.com/Masita134/Wallet-API.git](https://github.com/Masita134/Wallet-API.git)
+cd Wallet-API
 ```
 
 ### 2. Instalar las dependencias
@@ -67,45 +65,35 @@ Set-Location Wallet-API
 herd composer install
 ```
 
-### 3. Crear el archivo `.env`
+### 3. Configurar variables de entorno
 
 ```powershell
-Copy-Item .env.example .env
+cp .env.example .env
 ```
 
-### 4. Generar la clave de Laravel
+### 4. Generar claves de seguridad
 
 ```powershell
 herd php artisan key:generate
-```
-
-### 5. Generar el secreto de JWT
-
-```powershell
 herd php artisan jwt:secret
 ```
+> **Nota:** `.env` contiene información sensible (como el `JWT_SECRET`) y nunca debe subirse al repositorio.
 
-Esto genera `JWT_SECRET` en el archivo `.env`.
+### 5. Configurar la Base de Datos y ejecutar Migraciones
 
-> **Importante:** `.env` contiene información sensible y no debe subirse al repositorio.
-
-### 6. Configurar SQLite
-
-El proyecto utiliza SQLite para la base de datos local.
-
-Si el archivo todavía no existe:
+Si utilizás SQLite localmente, creá el archivo primero:
 
 ```powershell
-New-Item database/database.sqlite -ItemType File -Force
+touch database/database.sqlite
 ```
 
-Luego ejecutar las migraciones:
+Luego, ejecutá las migraciones y poblá la base con datos de prueba (seeders):
 
 ```powershell
-herd php artisan migrate
+herd php artisan migrate --seed
 ```
 
-### 7. Instalar y compilar los assets
+### 6. Instalar y compilar los assets del Frontend
 
 ```powershell
 npm install
@@ -122,403 +110,138 @@ Para iniciar el servidor local:
 herd php artisan serve
 ```
 
-La API estará disponible en:
-
-```text
-http://127.0.0.1:8000
-```
+* **API Base URL:** `http://127.0.0.1:8000/api/v1`
+* **Documentación Swagger:** `http://127.0.0.1:8000/api/documentation`
 
 ---
 
 ## ¿De qué se trata la API?
 
-Wallet API representa una billetera virtual en la que cada usuario puede tener una cuenta asociada.
+Wallet API representa el motor backend de una billetera virtual. Sus características principales son:
 
-La aplicación contempla:
-
-- Registro de usuarios.
-- Inicio y cierre de sesión mediante JWT.
-- Consulta del usuario autenticado.
-- Consulta del perfil propio.
-- Consulta de la cuenta propia.
-- Gestión de CBUs guardados.
-- Depósitos.
-- Consulta de movimientos.
-- Aislamiento de los datos de cada usuario.
-- Validación de datos de entrada.
-- Respuestas JSON con códigos HTTP.
-- Tests automatizados.
-
-El acceso a los recursos privados se realiza mediante el token JWT generado durante el login.
+- **Autenticación:** Registro y login seguro mediante JWT.
+- **Gestión de Cuentas:** Cada usuario posee una cuenta única en ARS o USD con validación de saldo.
+- **Operaciones Core:** Depósitos y transferencias a terceros.
+- **Agenda:** Guardado y gestión de CBUs frecuentes.
+- **Simulador Financiero:** Cálculo de rendimientos para plazos fijos.
+- **Historial:** Registro paginado de movimientos (ingresos y egresos).
+- **Panel Administrativo:** CRUD completo de usuarios, cuentas y transacciones protegido por roles.
+- **Seguridad Transaccional:** Uso de `DB::transaction()` para garantizar la integridad del dinero.
 
 ---
 
-## Autenticación
+## Autenticación y Credenciales de Prueba
 
-Las rutas privadas requieren un token JWT enviado mediante el header:
+Todas las rutas protegidas requieren un token JWT enviado en los headers:
+`Authorization: Bearer <token>`
+
+Al ejecutar el seeder (`php artisan migrate:fresh --seed`), se generan usuarios para facilitar las pruebas:
+
+| Usuario | Email | Contraseña | Rol |
+| :--- | :--- | :--- | :--- |
+| Test User | `test@example.com` | `password` | user |
+| Second User | `second@example.com` | `password` | user |
+| Admin User | `admin@example.com` | `password` | admin |
+
+---
+
+## Endpoints Principales
+
+*Todos los endpoints utilizan el prefijo `/api/v1`*
+
+### Autenticación & Perfil
+| Método | Endpoint | Privado | Descripción |
+| :--- | :--- | :--- | :--- |
+| POST | `/auth/register` | No | Registra un usuario y genera su cuenta con saldo 0. |
+| POST | `/auth/login` | No | Devuelve el token JWT. |
+| GET | `/profile` | Sí | Obtiene datos del usuario logueado. |
+| PATCH | `/profile` | Sí | Actualiza los datos del perfil propio. |
+
+### Operaciones Financieras
+| Método | Endpoint | Privado | Descripción |
+| :--- | :--- | :--- | :--- |
+| GET | `/account` | Sí | Obtiene CBU y saldo actual. |
+| POST | `/deposits` | Sí | Ingresa dinero a la cuenta propia. |
+| POST | `/transfers` | Sí | Envía dinero a otro CBU. Valida saldo y actualiza ambas cuentas. |
+| POST | `/investments/fixed-term/simulate` | Sí | Simula los intereses de un plazo fijo a 30 días (TNA 30%). |
+
+### Historial y Agenda
+| Método | Endpoint | Privado | Descripción |
+| :--- | :--- | :--- | :--- |
+| GET | `/movements` | Sí | Lista de movimientos paginada (15 por defecto, ordenable por fecha). |
+| GET | `/cbu` | Sí | Lista de CBUs guardados. |
+| POST | `/cbu/{cbu}/users/{idUser}` | Sí | Guarda un CBU en la agenda. |
+
+### Administración (Requiere Rol Admin)
+* **Usuarios:** `GET /admin/users` (CRUD de usuarios)
+* **Cuentas:** `GET /admin/accounts` (CRUD de cuentas)
+* **Movimientos:** `GET /admin/movements` (Auditoría de transacciones)
+
+---
+
+## Seguridad e Integridad de Datos
+
+* **Aislamiento:** El backend resuelve la cuenta utilizando el usuario autenticado del token JWT. No se confía en parámetros `user_id` o `account_id` enviados por el cliente.
+* **Transacciones BD:** Las transferencias ocurren dentro de un bloque `DB::transaction()`. Si el descuento de saldo funciona pero la acreditación al destino falla, toda la operación se revierte automáticamente.
+* **Manejo de Errores:** Todos los errores (401, 403, 404, 422) retornan un formato JSON predecible sin exponer detalles internos o trazas de SQL.
+
+---
+
+## Estructura de Base de Datos
 
 ```text
-Authorization: Bearer <token>
-```
-
-### Ejemplo de login
-
-Después de ejecutar:
-
-```powershell
-herd php artisan migrate:fresh --seed
-```
-el seeder crea tres usuarios de prueba:
-| Usuario     | Email                | Contraseña | Rol           |
-| ----------- | -------------------- | ---------- | ------------- |
-| Test User   | `test@example.com`   | `password` | Usuario       |
-| Second User | `second@example.com` | `password` | Usuario       |
-| Test Admin  | `admin@example.com`  | `password` | Administrador |
-
-Estas credenciales son únicamente para desarrollo y demostración local.
-
-```powershell
-$login = Invoke-RestMethod `
-    -Method Post `
-    -Uri http://127.0.0.1:8000/api/v1/auth/login `
-    -ContentType 'application/json' `
-    -Body '{"email":"test@example.com","password":"password"}'
-
-$login.access_token
-```
-El valor de access_token debe utilizarse para acceder a las rutas protegidas.
-
-
-### Ejemplo de consulta del perfil
-
-```powershell
-Invoke-RestMethod `
-    -Method Get `
-    -Uri http://127.0.0.1:8000/api/v1/profile `
-    -Headers @{ Authorization = "Bearer $($login.access_token)" }
-```
-
-Las rutas protegidas responden con JSON y estado `401 Unauthorized` cuando falta el token o el token no es válido.
-
----
-
-## Endpoints
-
-Todas las rutas de la API utilizan el prefijo:
-
-```text
-/api/v1
-```
-
-### Autenticación
-
-| Método | Endpoint | Token | Descripción |
-| --- | --- | --- | --- |
-| POST | `/api/v1/auth/register` | No | Registra un usuario y crea su cuenta. |
-| POST | `/api/v1/auth/login` | No | Valida las credenciales y devuelve un JWT. |
-| GET | `/api/v1/auth/me` | Sí | Devuelve información del usuario autenticado y su cuenta. |
-| POST | `/api/v1/auth/logout` | Sí | Invalida la sesión JWT actual. |
-
-### Usuario y cuenta
-
-| Método | Endpoint | Token | Descripción |
-| --- | --- | --- | --- |
-| GET | `/api/v1/profile` | Sí | Devuelve `id`, `name` y `email` del usuario autenticado. |
-| GET | `/api/v1/account` | Sí | Devuelve la cuenta asociada al usuario autenticado. |
-
-### CBUs guardados
-
-| Método | Endpoint | Token | Descripción |
-| --- | --- | --- | --- |
-| POST | `/api/v1/cbu/{cbu}/users/{idUser}` | Sí | Guarda un CBU asociado a un usuario. |
-| GET | `/api/v1/cbu` | Sí | Consulta los CBUs guardados. |
-| DELETE | `/api/v1/cbu/{cbu}/users/{idUser}` | Sí | Elimina un CBU guardado. |
-
-### Depósitos
-
-| Método | Endpoint | Token | Descripción |
-| --- | --- | --- | --- |
-| POST | `/api/v1/deposits` | Sí | Registra un depósito en la cuenta del usuario autenticado. |
-
-El depósito recibe un monto positivo y modifica únicamente la cuenta asociada al usuario autenticado.
-
-### Movimientos
-
-| Método | Endpoint | Token | Descripción |
-| --- | --- | --- | --- |
-| GET | `/api/v1/movements` | Sí | Consulta los movimientos de la cuenta del usuario autenticado. |
-
-La consulta de movimientos contempla:
-
-- Paginación.
-- `15` elementos por página por defecto.
-- Hasta `100` elementos por página.
-- Orden ascendente o descendente por fecha.
-- Orden descendente por defecto.
-- CBU de contraparte cuando corresponde.
-- Exclusión de operaciones rechazadas.
-- Aislamiento de los movimientos pertenecientes a otros usuarios.
-
-Ejemplos de parámetros:
-
-```text
-GET /api/v1/movements
-GET /api/v1/movements?page=2
-GET /api/v1/movements?per_page=25
-GET /api/v1/movements?order=asc
-GET /api/v1/movements?page=2&per_page=25&order=asc
+User (Roles: user, admin)
+ ├── Account (CBU único, balance, moneda)
+ │    └── Movement (Tipo: deposit, transfer_in, transfer_out)
+ └── Saved CBU (Agenda de terceros)
 ```
 
 ---
 
-## Movimientos
+## Testing Automatizado
 
-Los movimientos se encuentran asociados a una cuenta.
+El proyecto utiliza **PHPUnit**. Los tests emplean el trait `RefreshDatabase` para ejecutar pruebas en un entorno aislado sin afectar los datos reales.
 
-Actualmente se contemplan los siguientes tipos:
-
-```text
-deposit
-transfer_out
-transfer_in
-```
-
-### CBU de contraparte
-
-El campo `counterparty_cbu` representa el CBU de la otra cuenta involucrada en una operación.
-
-| Tipo de movimiento | `counterparty_cbu` |
-| --- | --- |
-| `deposit` | `null` |
-| `transfer_out` | CBU de la cuenta receptora |
-| `transfer_in` | CBU de la cuenta emisora |
-
-La cuenta propia se identifica mediante la cuenta asociada al usuario autenticado, por lo que el cliente no debe enviar un `account_id` para consultar los movimientos propios.
-
----
-
-## Seguridad y aislamiento de datos
-
-Las operaciones privadas se resuelven utilizando el usuario autenticado a partir del JWT.
-
-Esto permite evitar que un cliente pueda consultar o modificar información de otra cuenta enviando identificadores ajenos.
-
-En particular:
-
-- No se confía en un `user_id` enviado por el cliente para determinar el usuario autenticado.
-- No se utiliza un `account_id` enviado por el cliente para seleccionar la cuenta en operaciones protegidas.
-- Las contraseñas no se devuelven en las respuestas.
-- El secreto `JWT_SECRET` se mantiene en `.env`.
-- Las rutas privadas requieren autenticación JWT.
-
----
-
-## Base de datos
-
-La aplicación utiliza SQLite durante el desarrollo.
-
-Las principales entidades son:
-
-```text
-User
- └── Account
-      └── Movement
-```
-
-Un usuario posee una cuenta y una cuenta puede tener múltiples movimientos.
-
-También existe la gestión de cuentas/CBUs guardados para facilitar futuras operaciones.
-
----
-
-## Estructura principal del proyecto
-
-```text
-Wallet-API/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   └── Requests/
-│   └── Models/
-├── database/
-│   ├── factories/
-│   ├── migrations/
-│   ├── seeders/
-│   └── database.sqlite
-├── routes/
-│   └── api.php
-├── tests/
-│   ├── Feature/
-│   └── Unit/
-├── .env.example
-├── composer.json
-├── package.json
-└── README.md
-```
-
----
-
-## Testing
-
-El proyecto utiliza PHPUnit a través de Laravel.
-
-### Ejecutar todos los tests
-
+**Ejecutar la suite completa:**
 ```powershell
 herd php artisan test
 ```
 
-### Ejecutar un archivo específico
-
-Por ejemplo:
-
+**Ejecutar un test específico (Ej: Transferencias):**
 ```powershell
-herd php artisan test --filter=ProfileTest
+herd php artisan test --filter=TransferTest
 ```
 
-```powershell
-herd php artisan test --filter=DepositTest
-```
-
-```powershell
-herd php artisan test --filter=MovementTest
-```
-
-### Base de datos de testing
-
-Los tests utilizan `RefreshDatabase` para trabajar con una base de datos limpia y aislada durante las pruebas.
-
-Esto permite verificar cambios en usuarios, cuentas y movimientos sin dejar datos de pruebas persistentes.
+La suite cubre:
+* Aislamiento de perfiles (401 / 403).
+* Lógica matemática del simulador de plazos fijos.
+* Restricciones de transferencias (saldos insuficientes).
+* Paginación en historiales.
 
 ---
 
-## Comandos útiles
+## Flujo de Trabajo con Git
 
-### Ver las rutas disponibles
+El desarrollo se organiza mediante ramas por funcionalidad (Feature Branch Workflow).
 
-```powershell
-herd php artisan route:list
-```
-
-### Limpiar la configuración
-
-```powershell
-herd php artisan config:clear
-```
-
-### Recrear completamente la base de datos
-
-> Usar este comando únicamente en desarrollo/testing, ya que elimina las tablas existentes.
-
-```powershell
-herd php artisan migrate:fresh
-```
-
-### Recrear la base de datos y ejecutar seeders
-
-```powershell
-herd php artisan migrate:fresh --seed
-```
+1. La rama principal de desarrollo es `dev`.
+2. Para cada ticket (Ej: `WAL-008`), se crea una rama específica:
+   ```powershell
+   git checkout -b feature/wal-008-transferencias
+   ```
+3. Al finalizar, se pushean los cambios y se abre un Pull Request hacia `dev`:
+   ```powershell
+   git push -u origin feature/wal-008-transferencias
+   ```
+4. Solo se mergea a `main` cuando la versión es estable y lista para producción (AlwaysData).
 
 ---
 
-## Variables de entorno
-
-Las variables principales utilizadas por la aplicación incluyen:
-
-```env
-APP_NAME=Laravel
-APP_ENV=local
-APP_DEBUG=true
-
-DB_CONNECTION=sqlite
-
-JWT_SECRET=
-JWT_TTL=60
-```
-
-El valor de `JWT_SECRET` debe generarse mediante:
+## Comandos Útiles
 
 ```powershell
-herd php artisan jwt:secret
+herd php artisan route:list          # Ver todas las rutas
+herd php artisan config:clear        # Limpiar caché de configuración
+herd php artisan migrate:fresh       # Recrear la base (¡Borra datos!)
+herd php artisan migrate:fresh --seed # Recrear base y cargar usuarios de prueba
 ```
-
-No compartir ni versionar el archivo `.env`.
-
----
-
-## Flujo de trabajo con Git
-
-El proyecto se desarrolla utilizando ramas por funcionalidad.
-
-Ejemplo:
-
-```text
-dev
- ├── feature/WAL-004-login-jwt
- ├── wal-005
- ├── wal-007
- └── wal-009
-```
-
-La idea es que cada integrante trabaje sobre una funcionalidad concreta y luego integre los cambios mediante un Pull Request hacia `dev`.
-
-### Antes de comenzar una tarea
-
-Actualizar la rama de desarrollo:
-
-```powershell
-git checkout dev
-git pull origin dev
-```
-
-Crear la rama correspondiente:
-
-```powershell
-git checkout -b wal-009
-```
-
-### Revisar cambios antes del commit
-
-```powershell
-git status
-git diff
-git diff --check
-```
-
-### Crear un commit
-
-```powershell
-git add .
-git commit -m "feat: implementar consulta de movimientos"
-```
-
-### Subir la rama
-
-```powershell
-git push -u origin wal-009
-```
-
-Luego se crea un Pull Request:
-
-```text
-wal-009 → dev
-```
-
----
-
-## Objetivo del proyecto
-
-El objetivo de Wallet API es construir una API REST funcional para una billetera virtual aplicando buenas prácticas de desarrollo backend:
-
-- Separación de responsabilidades.
-- Validación de entradas.
-- Autenticación y autorización.
-- Persistencia de datos.
-- Relaciones entre modelos.
-- Respuestas HTTP y JSON consistentes.
-- Protección de información privada.
-- Testing automatizado.
-- Trabajo colaborativo con Git y GitHub.
-
-El proyecto se desarrolla de forma incremental a partir de historias de usuario, manteniendo cada funcionalidad aislada y testeada antes de integrarla a la rama `dev`.
